@@ -101,9 +101,9 @@ class DecompilerBytecode:
                     code = symbol.local_name
                     self.index += 1
 
-            elif symbol.name.startswith('˙'):  # FIXME
+            elif symbol.name_startswith_upperdot():  # FIXME
                 # print('B')
-                if symbol.name.lower() == '˙instance_help':
+                if symbol.name.lower() in ('Яinstance_help', '˙instance_help', 'Ÿinstance_help'):
                     code = 'NULL'
                 else:
                     # print(symbol.name, type(symbol.content[0]))
@@ -119,7 +119,8 @@ class DecompilerBytecode:
             return code
 
         if symbol_type in (Type.INSTANCE, Type.FUNC):
-            if token.int_param == -1:
+            # if token.int_param == -1:
+            if token.int_param is None:
                 if symbol_type == Type.FUNC:
                     return 'NOFUNC'
                 return '-1'
@@ -340,7 +341,7 @@ def get_func_code(symbol):
 
     code += ") {\n"
 
-    code += get_body_code(symbol, does_return=symbol.return_type is not None)
+    code += get_body_code(symbol, does_return=bool(symbol.return_type))
 
     code += '};'
     return code

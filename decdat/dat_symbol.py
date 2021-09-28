@@ -71,9 +71,12 @@ class DatSymbol:
             for i in range(self.id + 1, self.id + 1 + self.count)
         ]
 
+    def name_startswith_upperdot(self):
+        return self.name and self.name[0] in {'˙', 'Я', 'Ÿ'}
+
     @property
     def is_regular(self):
-        return not self.is_local and not self.name.startswith('˙')
+        return not self.is_local and not self.name_startswith_upperdot()
 
     def has_flag(self, flag):
         return self.flags & flag > 0

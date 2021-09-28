@@ -10,8 +10,9 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QAction, qApp, QFileDialo
 
 import decompiler
 from dat import Dat
-from decompiler import get_code
+from decompiler import get_code, get_tokens
 from dat_token import Token
+
 
 
 class TableWidgetItemWithNumber(QTableWidgetItem):
@@ -250,15 +251,29 @@ class MainWindow(QMainWindow):
         return symbolsTable
 
     def export_all(self):
-        for symbol in self.dat.symbols:
-            code = get_code(symbol)
-            if '.' in symbol.name:
-                _, right_size = symbol.name.split('.')
-                if not right_size.startswith('par'):
-                    print("DAMM", symbol.id)
-                    exit()
-                continue
-            print(code)
+        # symbol = self.dat.symbols[10229]
+        # print(symbol.id)
+        # print('TOKENS')
+        # print(get_tokens(symbol))
+        # print('CODE')
+        # print(get_code(symbol))
+        #
+        # return
+        with open('output.d', 'w') as file:
+
+            for symbol in self.dat.symbols:
+                print('symbol.id', symbol.id)
+                code = get_code(symbol)
+                if '.' in symbol.name:
+                    _, right_size = symbol.name.split('.')
+                    if not right_size.startswith('par'):
+                        print("DAMM", symbol.id)
+                        # exit()
+                    continue
+
+                file.write(code)
+                file.write('\n')
+                print(code)
 
 
 
@@ -272,7 +287,7 @@ class MainWindow(QMainWindow):
 
         filePath, _ = fileDialog.getOpenFileName(
             caption='Open .dat file',
-            filter='Compiled Daedalus Script (*.dat);;All Files (*)',
+            filter='Compiled Daedalus Script (*.dat *.DAT);;All Files (*)',
             options=options,
         )
 

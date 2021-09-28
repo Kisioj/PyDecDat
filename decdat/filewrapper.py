@@ -31,7 +31,9 @@ class FileWrapper:
             if char == b'\n':
                 break
             result += char
-        return result.decode(encoding='windows-1250')
+        # return result.decode(encoding='windows-1250')  # PL [DE] [EN]
+        # return result.decode(encoding='windows-1251')  # RU [EN]
+        return result.decode(encoding='windows-1252')  # IT FR [DE] [EN]
 
     def read_type(self, data_type):
         method = FileWrapper.TYPE_2_READ_FUNC[data_type]
