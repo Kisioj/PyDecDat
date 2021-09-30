@@ -4,10 +4,11 @@ from constants import Type, INT_FORMAT, BYTE_FORMAT, FLOAT_FORMAT, BYTES_FORMAT,
 
 
 class FileWrapper:
-    def __init__(self, file):
+    def __init__(self, file, encoding):
         self.file = file
         self.offset = 0
         self.content = file.read()
+        self.encoding = encoding
 
     def __repr__(self):
         return '<file %02x - %d>' % (self.offset, self.offset)
@@ -31,9 +32,10 @@ class FileWrapper:
             if char == b'\n':
                 break
             result += char
+        return result.decode(encoding=self.encoding)
         # return result.decode(encoding='windows-1250')  # PL [DE] [EN]
         # return result.decode(encoding='windows-1251')  # RU [EN]
-        return result.decode(encoding='windows-1252')  # IT FR [DE] [EN]
+        # return result.decode(encoding='windows-1252')  # IT FR [DE] [EN]
 
     def read_type(self, data_type):
         method = FileWrapper.TYPE_2_READ_FUNC[data_type]

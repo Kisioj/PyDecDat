@@ -5,8 +5,7 @@ from PyQt5.QtGui import QFont, QColor, QTextOption
 from PyQt5.QtWidgets import QMainWindow, QApplication, QAction, qApp, QFileDialog, \
     QVBoxLayout, QTableWidgetItem, QTableWidget, QWidget, QHBoxLayout, QPushButton, \
     QSplitter, QComboBox, QLineEdit, QTabWidget, QTextEdit, QAbstractItemView, QHeaderView, QFrame, \
-    QStyleFactory
-
+    QStyleFactory, QInputDialog, QMessageBox
 
 import decompiler
 from dat import Dat
@@ -259,9 +258,20 @@ class MainWindow(QMainWindow):
         # print(get_code(symbol))
         #
         # return
-        with open('output.d', 'w') as file:
+
+        items = ("Windows-1250 (PL, EN, DE)", "Windows-1251 (RU)", "Windows-1252 (IT, FR)", "UTF-8")
+        item, ok_pressed = QInputDialog.getItem(self, "Select Encoding", ".DAT encoding", items, 0, False)
+        if not item or not ok_pressed:
+            return
+
+        encoding = item.split(' ')[0].lower()
+
+        with open('output.d', 'w', encoding=encoding) as file:
 
             for symbol in self.dat.symbols:
+                if symbol.name_startswith_upperdot():
+                    continue
+
                 print('symbol.id', symbol.id)
                 code = get_code(symbol)
                 if '.' in symbol.name:
@@ -275,27 +285,31 @@ class MainWindow(QMainWindow):
                 file.write('\n')
                 print(code)
 
-
-
-
     def about(self):
         QMessageBox.about(self, "Daedalus Decompiler", "Version 1.1, based of DecDat by Gottfried - 2012")
 
     def selectDat(self):
-        options = QFileDialog.Options()
-        fileDialog = QFileDialog()
+        items = ("Windows-1250 (PL, EN, DE)", "Windows-1251 (RU)", "Windows-1252 (IT, FR)")
+        item, ok_pressed = QInputDialog.getItem(self, "Select Encoding", ".DAT encoding", items, 0, False)
+        if not item or not ok_pressed:
+            return
 
-        filePath, _ = fileDialog.getOpenFileName(
+        encoding = item.split(' ')[0].lower()
+
+        options = QFileDialog.Options()
+        file_dialog = QFileDialog()
+
+        file_path, _ = file_dialog.getOpenFileName(
             caption='Open .dat file',
             filter='Compiled Daedalus Script (*.dat *.DAT);;All Files (*)',
             options=options,
         )
 
-        if not filePath:
+        if not file_path:
             return
 
         self.setCursor(Qt.WaitCursor)  # FIXME
-        self.dat = Dat(filePath)
+        self.dat = Dat(file_path, encoding=encoding)
         Token.dat = self.dat
         self.show_symbols(self.dat.symbols)
         self.unsetCursor()  # FIXME

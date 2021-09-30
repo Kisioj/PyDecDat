@@ -6,11 +6,12 @@ from filewrapper import FileWrapper
 
 
 class Dat:
-    def __init__(self, file_path):
+    def __init__(self, file_path, encoding):
         DatSymbol.next_id = 0
+        self.encoding = encoding
 
         with open(file_path, 'rb') as file:
-            file = FileWrapper(file)
+            file = FileWrapper(file, encoding=encoding)
 
             # read head
             version = file.read_byte()

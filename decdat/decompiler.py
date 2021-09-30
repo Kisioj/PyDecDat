@@ -121,11 +121,12 @@ class DecompilerBytecode:
         if symbol_type in (Type.INSTANCE, Type.FUNC):
             # if token.int_param == -1:
             if token.int_param is None:
-                if symbol_type == Type.FUNC:
-                    return 'NOFUNC'
                 return '-1'
+            if token.int_param == -1 and symbol_type == Type.FUNC:
+                return 'NOFUNC'
 
-            return mainWindow.dat.symbols[token.int_param].local_name
+            # TODO I THINK THERE IS NO Type.INSTANCE parameter, beacause all of them are converted to int
+            return mainWindow.dat.symbols[token.int_param].local_name  # TODO is this line ever run? possible ERROR here
 
         elif symbol_type == Type.FLOAT:
             return str(struct.unpack(FLOAT_FORMAT, struct.pack(INT_FORMAT, token.int_param))[0])
@@ -375,12 +376,16 @@ def get_const_code(symbol):
 
 
 def get_instance_code(symbol):
-    if not symbol.has_flag(Flag.CONST):  # TODO: why not move this somewhere else, outside this function?
-        return get_var_code(symbol)
+    code = ""
+    if symbol.name_startswith_upperdot():
+        code += "// "
 
-    code = f'instance {symbol.name}({symbol.type_int_as_str}) {{\n'
-    code += get_body_code(symbol)
-    code += '};'
+    if not symbol.has_flag(Flag.CONST):  # TODO: why not move this somewhere else, outside this function?
+        code += get_var_code(symbol)
+    else:
+        code += f'instance {symbol.name}({symbol.type_int_as_str}) {{\n'
+        code += get_body_code(symbol)
+        code += '};'
     return code
 
 
