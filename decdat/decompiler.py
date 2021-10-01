@@ -192,7 +192,7 @@ class DecompilerBytecode:
             if len(self.lines):
                 line = self.lines[0]
 
-            if line and line.text.startswith('if') and self.if_on:
+            if line and line.text.startswith('if') and self.if_on and tpos > line.stack_pointer:
                 line.text = 'else ' + line.text
                 return
             else:
