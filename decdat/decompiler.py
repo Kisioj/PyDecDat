@@ -1,9 +1,8 @@
 import struct
+
 from constants import Type, Flag, TYPE_2_STR, INT_FORMAT, FLOAT_FORMAT
 from dat_token import Token
 from tokenenum import TokenEnum
-
-mainWinow = None
 
 
 class Line:
@@ -22,8 +21,8 @@ def data_repr(element):
 
 
 class DecompilerBytecode:
-    def __init__(self, *args, return_param=False):
-
+    def __init__(self, *args, return_param=False, dat = None):
+        self.dat = dat
         self.tokens = None  # code
         self.current_token = None
 
@@ -39,7 +38,7 @@ class DecompilerBytecode:
         self.decompile(*args)
 
     def decompile(self, address_start, address_end):
-        self.tokens = Token.get_tokens_from_stack(address_start, address_end)
+        self.tokens = Token.get_tokens_from_stack(address_start, address_end, dat=self.dat)
         self.index = len(self.tokens) - 1
 
         while self.index >= 0:
@@ -75,6 +74,10 @@ class DecompilerBytecode:
             return self.decompile_call()
         elif op_type in (TokenEnum.BINARY_OP, TokenEnum.UNARY_OP):
             return self.decompile_operation()
+        elif op_type == TokenEnum.JUMP:
+            return "<?>"
+        elif op_type == TokenEnum.ASSIGN:
+            return "<?>"
         raise Exception(f'Unknown parameter type: {op_type}')
 
     def decompile_return(self):
@@ -107,7 +110,8 @@ class DecompilerBytecode:
                     code = 'NULL'
                 else:
                     # print(symbol.name, type(symbol.content[0]))
-                    code = '"' + symbol.content[0] + '"'  # FIXME: maybe make it so conent isnt list if has one value only
+                    code = '"' + symbol.content[
+                        0] + '"'  # FIXME: maybe make it so conent isnt list if has one value only
 
             else:
                 # print('C')
@@ -126,7 +130,7 @@ class DecompilerBytecode:
                 return 'NOFUNC'
 
             # TODO I THINK THERE IS NO Type.INSTANCE parameter, beacause all of them are converted to int
-            return mainWindow.dat.symbols[token.int_param].local_name  # TODO is this line ever run? possible ERROR here
+            return self.dat.symbols[token.int_param].local_name  # TODO is this line ever run? possible ERROR here
 
         elif symbol_type == Type.FLOAT:
             return str(struct.unpack(FLOAT_FORMAT, struct.pack(INT_FORMAT, token.int_param))[0])
@@ -222,7 +226,7 @@ class DecompilerBytecode:
                     sub = 0
 
         self.lines.insert(
-            t-sub,
+            t - sub,
             Line(
                 stack_pointer=-0xbeef,
                 text='}' + (';' if add_semicolon else '')
@@ -260,7 +264,8 @@ def get_code(symbol, assembly=False):
         return get_func_code(symbol)
 
     elif symbol.type in (Type.FLOAT, Type.INT, Type.STRING, Type.FUNC):
-        if symbol.has_flag(Flag.CLASSVAR) or not symbol.has_flag(Flag.CONST):   # FIXME: is it even possible to have both flags at once?
+        if symbol.has_flag(Flag.CLASSVAR) or not symbol.has_flag(
+                Flag.CONST):  # FIXME: is it even possible to have both flags at once?
             return get_var_code(symbol)
         else:
             return get_const_code(symbol)
@@ -282,7 +287,7 @@ def get_assembly_code(symbol):
 
 def get_tokens(symbol):
     code = ''
-    tokens = Token.get_tokens_from_stack(symbol.address_start, symbol.address_end)
+    tokens = Token.get_tokens_from_stack(symbol.address_start, symbol.address_end, dat=symbol.dat)
     for token in tokens:
         code += f'{token.stack_pointer:06x}    '.upper()
         code += f'{token.op._name:<17s}   '
@@ -398,7 +403,8 @@ def get_prototype_code(symbol):
 
 def get_body_code(symbol, does_return=False):  # addBytecode
     code = ''
-    start = symbol.address_start + (symbol.count * 6)  # TODO: whats this symbol.count * 6 for? probably because calling parameter takes 6 bytes
+    start = symbol.address_start + (
+                symbol.count * 6)  # TODO: whats this symbol.count * 6 for? probably because calling parameter takes 6 bytes
     end = symbol.address_end - 1
 
     if symbol.is_instance and symbol.has_prototype:
@@ -407,10 +413,8 @@ def get_body_code(symbol, does_return=False):  # addBytecode
     for local_var in symbol.local_vars:
         code += f'    {get_code(local_var)}\n'
 
-    func = DecompilerBytecode(start, end, return_param=does_return)
+    func = DecompilerBytecode(start, end, return_param=does_return, dat=symbol.dat)
     for line in func.lines:
         code += f'    {line.text}\n'
 
     return code
-
-

@@ -272,18 +272,19 @@ class MainWindow(QMainWindow):
                 if symbol.name_startswith_upperdot():
                     continue
 
-                print('symbol.id', symbol.id)
+                # print('symbol.id', symbol.id)
                 code = get_code(symbol)
                 if '.' in symbol.name:
                     _, right_size = symbol.name.split('.')
                     if not right_size.startswith('par'):
-                        print("DAMM", symbol.id)
+                        pass
+                        # print("DAMM", symbol.id)
                         # exit()
                     continue
 
                 file.write(code)
                 file.write('\n')
-                print(code)
+                # print(code)
 
     def about(self):
         QMessageBox.about(self, "Daedalus Decompiler", "Version 1.1, based of DecDat by Gottfried - 2012")
@@ -310,7 +311,6 @@ class MainWindow(QMainWindow):
 
         self.setCursor(Qt.WaitCursor)  # FIXME
         self.dat = Dat(file_path, encoding=encoding)
-        Token.dat = self.dat
         self.show_symbols(self.dat.symbols)
         self.unsetCursor()  # FIXME
         # self.decompiler = Decompiler(dat=self.dat)
