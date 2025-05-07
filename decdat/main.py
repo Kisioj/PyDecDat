@@ -35,6 +35,9 @@ class MainWindow(QMainWindow):
         self.assemblyCode = None
         self.dat = None
         self.decompiler = None
+
+        self.searchCriteriaComboBox = None
+        self.searchInput = None
         self.initUI()
 
     def initUI(self):
@@ -121,15 +124,16 @@ class MainWindow(QMainWindow):
         searchlayout = QHBoxLayout()
         searchwidget.setLayout(searchlayout)
 
-        cb = QComboBox()
-        cb.addItems(["Id", "Symbol name", "Type"])
+        self.searchCriteriaComboBox = QComboBox()
+        self.searchCriteriaComboBox.addItems(["Id", "Symbol name", "Type"])
         self.searchInput = QLineEdit()
-        pb = QPushButton("Search")
+        searchButton = QPushButton("Search")
         self.searchInput.returnPressed.connect(self.search)
+        searchButton.clicked.connect(self.search)
 
-        searchlayout.addWidget(cb)
+        searchlayout.addWidget(self.searchCriteriaComboBox)
         searchlayout.addWidget(self.searchInput)
-        searchlayout.addWidget(pb)
+        searchlayout.addWidget(searchButton)
 
         leftsidelayout.addWidget(searchwidget)
 
@@ -176,13 +180,41 @@ class MainWindow(QMainWindow):
         self.show()
 
     def search(self):
+        if not self.dat or not self.dat.symbols:
+            self.statusBar().showMessage("DAT file not loaded or no symbols.")
+            self.show_symbols([])
+            return
+
         search_text = self.searchInput.text()
 
-        symbols = [symbol for symbol in self.dat.symbols if search_text in symbol.name]
+        if not search_text:
+            self.statusBar().showMessage("Please enter a search term.")
+            self.show_symbols(self.dat.symbols)
+            return
 
-        self.show_symbols(symbols)
+        selected_criterion = self.searchCriteriaComboBox.currentText()
 
-        print(search_text)
+        filtered_symbols = []
+        for symbol in self.dat.symbols:
+            match = False
+            if selected_criterion == "Id":
+                if search_text in str(symbol.id):
+                    match = True
+            elif selected_criterion == "Symbol name":
+                if symbol.name and search_text in symbol.name.lower():
+                    match = True
+            elif selected_criterion == "Type":
+                type_str = symbol.type_as_str
+                if search_text in type_str.lower():
+                    match = True
+            
+            if match:
+                filtered_symbols.append(symbol)
+
+
+        self.show_symbols(filtered_symbols)
+        self.statusBar().showMessage(f"Found {len(filtered_symbols)} symbol(s) for '{search_text}' in '{selected_criterion}'.")
+
 
     def createSymbolDetailsWidget(self, parent):
         symbolDetails = QTableWidget()

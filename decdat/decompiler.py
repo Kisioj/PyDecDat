@@ -75,6 +75,10 @@ class DecompilerBytecode:
             return self.decompile_call()
         elif op_type in (TokenEnum.BINARY_OP, TokenEnum.UNARY_OP):
             return self.decompile_operation()
+        elif op_type == TokenEnum.JUMP:
+            return "<*>"
+        elif op_type == TokenEnum.ASSIGN:
+            return "<#>"
         raise Exception(f'Unknown parameter type: {op_type}')
 
     def decompile_return(self):
